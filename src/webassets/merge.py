@@ -1,16 +1,16 @@
 """Contains the core functionality that manages merging of assets.
 """
-from __future__ import with_statement
+
 import contextlib
 
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import logging
 try:
-    import cStringIO as StringIO
+    import io as StringIO
 except:
-    import StringIO
+    import io
 
-from utils import cmp_debug_levels
+from .utils import cmp_debug_levels
 
 
 __all__ = ('FileHunk', 'MemoryHunk', 'merge', 'FilterTool',
@@ -94,7 +94,7 @@ class UrlHunk(BaseHunk):
 
     def data(self):
         if not hasattr(self, '_data'):
-            request = urllib2.Request(self.url)
+            request = urllib.request.Request(self.url)
 
             # Look in the cache for etag / last modified headers to use
             # TODO: "expires" header could be supported
@@ -108,8 +108,8 @@ class UrlHunk(BaseHunk):
 
             # Make a request
             try:
-                response = urllib2.urlopen(request)
-            except urllib2.HTTPError, e:
+                response = urllib.request.urlopen(request)
+            except urllib.error.HTTPError as e:
                 if e.code != 304:
                     raise
                     # Use the cached version of the url
@@ -241,11 +241,11 @@ class FilterTool(object):
             kwargs_final = self.kwargs.copy()
             kwargs_final.update(kwargs or {})
 
-            data = StringIO.StringIO(hunk.data())
+            data = io.StringIO(hunk.data())
             for filter in filters:
                 log.debug('Running method "%s" of  %s with kwargs=%s',
                     type, filter, kwargs_final)
-                out = StringIO.StringIO()
+                out = io.StringIO()
                 getattr(filter, type)(data, out, **kwargs_final)
                 data = out
                 data.seek(0)
@@ -296,7 +296,7 @@ class FilterTool(object):
 
         def func():
             filter = filters[0]
-            out = StringIO.StringIO()
+            out = io.StringIO()
             kwargs_final = self.kwargs.copy()
             kwargs_final.update(kwargs or {})
             log.debug('Running method "%s" of %s with args=%s, kwargs=%s',
@@ -334,6 +334,5 @@ def select_filters(filters, level):
     """Return from the list in ``filters`` those filters which indicate that
     they should run for the given debug level.
     """
-    return filter(
-        lambda f: f.max_debug_level is None or
-                  cmp_debug_levels(level, f.max_debug_level) <= 0, filters)
+    return [f for f in filters if f.max_debug_level is None or
+                  cmp_debug_levels(level, f.max_debug_level) <= 0]

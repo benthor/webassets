@@ -48,7 +48,7 @@ class YAMLLoader(object):
         Each item yielded will be either a string representing a file path
         or a bundle."""
         contents = data.get('contents', [])
-        if isinstance(contents, basestring):
+        if isinstance(contents, str):
             contents = contents,
         for content in contents:
             if isinstance(content, dict):
@@ -68,14 +68,14 @@ class YAMLLoader(object):
     def _get_bundles(self, obj, known_bundles=None):
         """Return a dict that keys bundle names to bundles."""
         bundles = {}
-        for key, data in obj.iteritems():
+        for key, data in obj.items():
             if data is None:
                 data = {}
             bundles[key] = self._get_bundle(data)
 
         # now we need to recurse through the bundles and get any that
         # are included in each other.
-        for bundle_name, bundle in bundles.items():
+        for bundle_name, bundle in list(bundles.items()):
             # copy contents
             contents = list(bundle.contents)
             for i, item in enumerate(bundle.contents):
@@ -94,7 +94,7 @@ class YAMLLoader(object):
 
         The filename can be False if it is unknown.
         """
-        if isinstance(self.file_or_filename, basestring):
+        if isinstance(self.file_or_filename, str):
             return open(self.file_or_filename), self.file_or_filename
 
         file = self.file_or_filename
@@ -209,7 +209,7 @@ class YAMLLoader(object):
 
             # Load bundles
             bundles = self._get_bundles(obj.get('bundles', {}))
-            for name, bundle in bundles.iteritems():
+            for name, bundle in bundles.items():
                 env.register(name, bundle)
 
             return env
@@ -230,7 +230,7 @@ class PythonLoader(object):
             try:
                 try:
                     self.module = import_module(module_name)
-                except ImportError, e:
+                except ImportError as e:
                     raise LoaderError(e)
             finally:
                 sys.path.pop(0)
@@ -254,7 +254,7 @@ class PythonLoader(object):
         """
         try:
             return getattr(self.module, 'environment')
-        except AttributeError, e:
+        except AttributeError as e:
             raise LoaderError(e)
 
 

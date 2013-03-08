@@ -20,7 +20,7 @@
 
 import posixpath
 import os
-from urllib import url2pathname, pathname2url
+from urllib.request import url2pathname, pathname2url
 
 __all__ = [
     'nativejoin',
@@ -192,9 +192,9 @@ def testJoin():
         ('', '../path'),
     ]
     for entry in thelist:
-        print entry, '      ::        ', pathjoin(*entry)
-        print entry, '      ::        ', nativejoin(*entry)
-        print '\n'
+        print(entry, '      ::        ', pathjoin(*entry))
+        print(entry, '      ::        ', nativejoin(*entry))
+        print('\n')
 
 def testRelpathto():
     thedir = '//toplevel/dirone/dirtwo/dirthree'
@@ -209,7 +209,7 @@ def testRelpathto():
         ('../../../fish1/fish2/', 'sub1/sub2/file1.html'),
    ]
     for orig, dest in thelist:
-        print '(%s, %s)      : ' % (orig, dest), relpathto(thedir, orig, dest)
+        print('(%s, %s)      : ' % (orig, dest), relpathto(thedir, orig, dest))
 
 def testRelpathto2():
     thedir = 'section3/'
@@ -218,7 +218,7 @@ def testRelpathto2():
     ]
     for orig, dest in thelist:
         answer = relpathto(thedir, orig, dest)
-        print '(%s, %s)      : ' % (orig, dest), answer
+        print('(%s, %s)      : ' % (orig, dest), answer)
 
 def testRelpath():
     thelist = [
@@ -226,7 +226,7 @@ def testRelpath():
     ]
     for orig, dest in thelist:
         answer = relpath(orig, dest)
-        print '(%s, %s)      : ' % (orig, dest), answer
+        print('(%s, %s)      : ' % (orig, dest), answer)
 
 
 if __name__ == '__main__':

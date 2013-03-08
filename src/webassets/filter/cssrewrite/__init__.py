@@ -1,7 +1,8 @@
-import os, urlparse
+import os, urllib.parse
 from os.path import join
 from webassets.utils import common_path_prefix
-import urlpath
+from . import urlpath
+import collections
 try:
     from collections import OrderedDict
 except ImportError:
@@ -9,7 +10,7 @@ except ImportError:
     # support ordering - it's just a nice bonus.
     OrderedDict = dict
 
-from base import CSSUrlRewriter, addsep, path2url
+from .base import CSSUrlRewriter, addsep, path2url
 
 
 __all__ = ('CSSRewrite',)
@@ -59,14 +60,14 @@ class CSSRewrite(CSSUrlRewriter):
         return self.replace
 
     def input(self, _in, out, **kw):
-        if self.replace not in (False, None) and not callable(self.replace):
+        if self.replace not in (False, None) and not isinstance(self.replace, collections.Callable):
             # For replace mode, make sure we have all the directories to be
             # rewritten in form of a url, so we can later easily match it
             # against the urls encountered in the CSS.
             replace_dict = False
             root = addsep(self.env.directory)
             replace_dict = OrderedDict()
-            for repldir, sub in self.replace.items():
+            for repldir, sub in list(self.replace.items()):
                 repldir = addsep(os.path.normpath(join(root, repldir)))
                 replurl = path2url(repldir[len(common_path_prefix([root, repldir])):])
                 replace_dict[replurl] = sub
@@ -76,11 +77,11 @@ class CSSRewrite(CSSUrlRewriter):
 
     def replace_url(self, url):
         # Replace mode: manually adjust the location of files
-        if callable(self.replace):
+        if isinstance(self.replace, collections.Callable):
             return self.replace(url)
         elif self.replace is not False:
-            for to_replace, sub in self.replace_dict.items():
-                targeturl = urlparse.urljoin(self.source_url, url)
+            for to_replace, sub in list(self.replace_dict.items()):
+                targeturl = urllib.parse.urljoin(self.source_url, url)
                 if targeturl.startswith(to_replace):
                     url = "%s%s" % (sub, targeturl[len(to_replace):])
                     # Only apply the first match
@@ -89,11 +90,11 @@ class CSSRewrite(CSSUrlRewriter):
         # Default mode: auto correct relative urls
         else:
             # If path is an absolute one, keep it
-            parsed = urlparse.urlparse(url)
+            parsed = urllib.parse.urlparse(url)
             if not parsed.scheme and not parsed.path.startswith('/'):
                 # rewritten url: relative path from new location (output)
                 # to location of referenced file (source + current url)
                 url = urlpath.relpath(self.output_url,
-                    urlparse.urljoin(self.source_url, url))
+                    urllib.parse.urljoin(self.source_url, url))
 
         return url

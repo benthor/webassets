@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 import os
 from nose.tools import assert_raises, with_setup
@@ -9,7 +9,7 @@ from webassets import Bundle
 from webassets.test import TempEnvironmentHelper
 from webassets.exceptions import ImminentDeprecationWarning
 
-from helpers import check_warnings
+from .helpers import check_warnings
 
 
 class TestEnvApi(object):
@@ -168,7 +168,7 @@ class TestSpecialProperties(object):
 
         # Standard string values
         self.m.versions = 'timestamp'
-        assert isinstance(self.m.config['versions'], basestring)
+        assert isinstance(self.m.config['versions'], str)
         assert isinstance(self.m.versions, Version)
         assert self.m.versions == 'timestamp'   # __eq__
         assert self.m.versions != 'hash'

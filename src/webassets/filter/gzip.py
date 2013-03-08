@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import gzip
 from webassets.filter import Filter

@@ -45,7 +45,9 @@ enough to make this decision by itself.
 """
 
 
-class BaseUpdater(object):
+class BaseUpdater(object, metaclass=RegistryMetaclass(
+        clazz=lambda: BaseUpdater, attribute='needs_rebuild',
+        desc='an updater implementation')):
     """Base updater class.
 
     Child classes that define an ``id`` attribute are accessible via their
@@ -53,10 +55,6 @@ class BaseUpdater(object):
 
     A single instance can be used with different environments.
     """
-
-    __metaclass__ = RegistryMetaclass(
-        clazz=lambda: BaseUpdater, attribute='needs_rebuild',
-        desc='an updater implementation')
 
     def needs_rebuild(self, bundle, env):
         """Returns ``True`` if the given bundle needs to be rebuilt,
@@ -114,7 +112,7 @@ class TimestampUpdater(BundleDefUpdater):
     id = 'timestamp'
 
     def check_timestamps(self, bundle, env, o_modified=None):
-        from bundle import Bundle, is_url
+        from .bundle import Bundle, is_url
         from webassets.version import TimestampVersion
 
         if not o_modified:
@@ -146,7 +144,7 @@ class TimestampUpdater(BundleDefUpdater):
         # the bundle source files, as well as any additional
         # dependencies that we are supposed to watch.
         for iterator, result in (
-            (lambda e: map(lambda s: s[1], bundle.resolve_contents(e)), True),
+            (lambda e: [s[1] for s in bundle.resolve_contents(e)], True),
             (bundle.resolve_depends, SKIP_CACHE)
         ):
             for item in iterator(env):

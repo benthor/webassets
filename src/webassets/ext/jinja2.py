@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import warnings
 import jinja2
@@ -182,7 +182,7 @@ class AssetsExtension(Extension):
 
         # For each url, execute the content of this template tag (represented
         # by the macro ```caller`` given to use by Jinja2).
-        result = u""
+        result = ""
         for url in urls:
             result += caller(url, bundle.extra)
         return result
@@ -216,7 +216,7 @@ class Jinja2Loader(GlobLoader):
         for i, env in enumerate(self.jinja2_envs):
             try:
                 t = env.parse(contents.decode(self.charset))
-            except jinja2.exceptions.TemplateSyntaxError, e:
+            except jinja2.exceptions.TemplateSyntaxError as e:
                 #print ('jinja parser (env %d) failed: %s'% (i, e))
                 pass
             else:

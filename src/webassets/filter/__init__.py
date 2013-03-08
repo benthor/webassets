@@ -2,13 +2,14 @@
 contents (think minification, compression).
 """
 
-from __future__ import with_statement
+
 
 import os
 import subprocess
 import inspect
 import shlex
 import tempfile
+import collections
 try:
     frozenset
 except NameError:
@@ -29,7 +30,7 @@ def freezedicts(obj):
     if isinstance(obj, (list, tuple)):
         return type(obj)([freezedicts(sub) for sub in obj])
     if isinstance(obj, dict):
-        return frozenset(obj.iteritems())
+        return frozenset(iter(obj.items()))
     return obj
 
 
@@ -46,7 +47,7 @@ def smartsplit(string, sep):
     """
     assert string is not None   # or shlex will read from stdin
     # shlex fails miserably with unicode input
-    is_unicode = isinstance(sep, unicode)
+    is_unicode = isinstance(sep, str)
     if is_unicode:
         string = string.encode('utf8')
     l = shlex.shlex(string, posix=True)
@@ -54,7 +55,7 @@ def smartsplit(string, sep):
     l.whitespace_split = True
     l.quotes = ''
     if is_unicode:
-        return map(lambda s: s.decode('utf8'), list(l))
+        return [s.decode('utf8') for s in list(l)]
     else:
         return list(l)
 
@@ -83,7 +84,7 @@ def parse_options(options):
     #    attribute: ('config variable,')
     #    attribute: 'config variable'
     result = {}
-    for internal, external in options.items():
+    for internal, external in list(options.items()):
         if not isinstance(external, option):
             if not isinstance(external, (list, tuple)):
                 external = (external,)
@@ -138,7 +139,7 @@ class Filter(object):
         # allows creating filter instances with options that
         # deviate from the global default.
         # TODO: can the metaclass generate a init signature?
-        for attribute, (initarg, _, _) in self._options.items():
+        for attribute, (initarg, _, _) in list(self._options.items()):
             arg = initarg if initarg is not None else attribute
             if arg in kwargs:
                 setattr(self, attribute, kwargs.pop(arg))
@@ -146,7 +147,7 @@ class Filter(object):
                 setattr(self, attribute, None)
         if kwargs:
             raise TypeError('got an unexpected keyword argument: %s' %
-                            kwargs.keys()[0])
+                            list(kwargs.keys())[0])
 
     def __hash__(self):
         return self.id()
@@ -252,7 +253,7 @@ class Filter(object):
         Note: This may be called multiple times if one filter instance
         is used with different asset environment instances.
         """
-        for attribute, (_, configvar, type) in self._options.items():
+        for attribute, (_, configvar, type) in list(self._options.items()):
             if not configvar:
                 continue
             if getattr(self, attribute) is None:
@@ -420,13 +421,13 @@ class ExternalTool(Filter):
             def replace(arg):
                 try:
                     return arg.format(*args, **kwargs)
-                except KeyError, e:
+                except KeyError as e:
                     # Treat "output" and "input" variables special, they
                     # are dealt with in :meth:`subprocess` instead.
                     if e.args[0] not in ('input', 'output'):
                         raise
                     return arg
-            argv = map(replace, self.argv)
+            argv = list(map(replace, self.argv))
         else:
             argv = self.argv
         self.subprocess(argv, out, data=data)
@@ -462,8 +463,7 @@ class ExternalTool(Filter):
         input_file = tempfile_on_demand()
         output_file = tempfile_on_demand()
         if hasattr(str, 'format'):   # Support Python 2.5 without the feature
-            argv = map(lambda item:
-                       item.format(input=input_file, output=output_file), argv)
+            argv = [item.format(input=input_file, output=output_file) for item in argv]
 
         try:
             if input_file.created:
@@ -557,14 +557,14 @@ def get_filter(f, *args, **kwargs):
         # Don't need to do anything.
         assert not args and not kwargs
         return f
-    elif isinstance(f, basestring):
+    elif isinstance(f, str):
         if f in _FILTERS:
             klass = _FILTERS[f]
         else:
             raise ValueError('No filter \'%s\'' % f)
     elif inspect.isclass(f) and issubclass(f, Filter):
         klass = f
-    elif callable(f):
+    elif isinstance(f, collections.Callable):
         assert not args and not kwargs
         return CallableFilter(f)
     else:
@@ -639,7 +639,7 @@ def load_builtin_filters():
         module_name = 'webassets.filter.%s' % name
         try:
             module = import_module(module_name)
-        except Exception, e:
+        except Exception as e:
             warnings.warn('Error while loading builtin filter '
                           'module \'%s\': %s' % (module_name, e))
         else:

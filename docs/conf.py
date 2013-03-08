@@ -42,8 +42,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'webassets'
-copyright = u'2009, 2010, Michael Elsdörfer'
+project = 'webassets'
+copyright = '2009, 2010, Michael Elsdörfer'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -177,8 +177,8 @@ htmlhelp_basename = 'webassetsdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'webassets.tex', u'webassets Documentation',
-   u'Michael Elsdörfer', 'manual'),
+  ('index', 'webassets.tex', 'webassets Documentation',
+   'Michael Elsdörfer', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

@@ -1,8 +1,8 @@
-from __future__ import with_statement
+
 
 import os
 from contextlib import contextmanager
-from StringIO import StringIO
+from io import StringIO
 from nose.tools import assert_raises, assert_equals, assert_true
 from nose import SkipTest
 from mock import patch, Mock, DEFAULT
@@ -12,7 +12,7 @@ from webassets import Environment
 from webassets.exceptions import FilterError
 from webassets.filter import (
     Filter, ExternalTool, get_filter, register_filter,unique_modules)
-from helpers import TempEnvironmentHelper
+from .helpers import TempEnvironmentHelper
 
 # Sometimes testing filter output can be hard if they generate
 # unpredictable text like temp paths or timestamps. doctest has
@@ -184,7 +184,7 @@ class TestExternalToolClass(object):
                 # Special placeholders that are passed through
                 '{input}', '{output}']
         Filter().output(StringIO('content'), StringIO(), kwarg='value')
-        print Filter.result
+        print(Filter.result)
         assert Filter.result == (
             ["<class 'tests.test_filters.Filter'>", 'value', '7',
              '{input}', '{output}'],
@@ -569,7 +569,7 @@ class TestCSSPrefixer(TempEnvironmentHelper):
         assert self.get('out.css') == 'a {\n    -moz-border-radius: 1em;\n    -webkit-border-radius: 1em;\n    border-radius: 1em\n    }'
 
     def test_encoding(self):
-        self.create_files({'in': u"""a { content: '\xe4'; }""".encode('utf8')})
+        self.create_files({'in': """a { content: '\xe4'; }""".encode('utf8')})
         self.mkbundle('in', filters='cssprefixer', output='out.css').build()
         self.p('out.css')
         assert self.get('out.css') == 'a {\n    content: "\xc3\xa4"\n    }'

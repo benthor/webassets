@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 import random
 from nose.tools import assert_equals
@@ -6,7 +6,7 @@ from webassets.filter import Filter
 from webassets.cache import BaseCache, FilesystemCache, MemoryCache
 from webassets.updater import TimestampUpdater
 from webassets.merge import MemoryHunk
-from helpers import TempEnvironmentHelper, TempDirHelper
+from .helpers import TempEnvironmentHelper, TempDirHelper
 
 
 class TestCacheClasses(object):

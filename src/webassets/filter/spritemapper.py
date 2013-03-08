@@ -1,5 +1,5 @@
-from __future__ import absolute_import
-import StringIO
+
+import io
 from contextlib import contextmanager
 from webassets.filter import Filter
 
@@ -29,7 +29,7 @@ else:
 
         def __init__(self, fname, conf=None, data=''):
             super(FakeCSSFile, self).__init__(fname, conf=conf)
-            self.data = StringIO.StringIO(data)
+            self.data = io.StringIO(data)
 
         @contextmanager
         def open_parser(self):
@@ -107,11 +107,11 @@ class Spritemapper(Filter):
         sm_plcs = []
         for smap in smaps:
             with open_sprites(smap, pad=conf.padding) as sprites:
-                print("Packing sprites in mapping %s" % (smap.fname,))
+                print(("Packing sprites in mapping %s" % (smap.fname,)))
                 packed = PackedBoxes(sprites, anneal_steps=conf.anneal_steps)
                 print_packed_size(packed)
                 sm_plcs.append((smap, packed.placements))
-                print("Writing spritemap image at %s" % (smap.fname,))
+                print(("Writing spritemap image at %s" % (smap.fname,)))
                 im = stitch(packed)
                 with open(smap.fname, "wb") as fp:
                     im.save(fp)

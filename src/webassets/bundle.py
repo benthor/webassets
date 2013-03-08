@@ -1,13 +1,13 @@
 import os
 from os import path
-import urlparse
+import urllib.parse
 
-from filter import get_filter
-from merge import (FileHunk, UrlHunk, FilterTool, merge, merge_filters,
+from .filter import get_filter
+from .merge import (FileHunk, UrlHunk, FilterTool, merge, merge_filters,
                    select_filters, MoreThanOneFilterError, NoFilters)
-from updater import SKIP_CACHE
-from exceptions import BundleError, BuildError
-from utils import cmp_debug_levels
+from .updater import SKIP_CACHE
+from .exceptions import BundleError, BuildError
+from .utils import cmp_debug_levels
 
 
 __all__ = ('Bundle', 'get_all_bundle_files',)
@@ -16,7 +16,7 @@ __all__ = ('Bundle', 'get_all_bundle_files',)
 def is_url(s):
     if not isinstance(s, str):
         return False
-    parsed = urlparse.urlsplit(s)
+    parsed = urllib.parse.urlsplit(s)
     return bool(parsed.scheme and parsed.netloc) and len(parsed.scheme) > 1
 
 
@@ -56,7 +56,7 @@ class Bundle(object):
         self.extra = options.pop('extra', {})
         if options:
             raise TypeError("got unexpected keyword argument '%s'" %
-                            options.keys()[0])
+                            list(options.keys())[0])
 
     def __repr__(self):
         return "<%s output=%s, filters=%s, contents=%s>" % (
@@ -77,8 +77,8 @@ class Bundle(object):
             self._filters = ()
             return
 
-        if isinstance(value, basestring):
-            filters = map(unicode.strip, unicode(value).split(','))
+        if isinstance(value, str):
+            filters = list(map(str.strip, str(value).split(',')))
         elif isinstance(value, (list, tuple)):
             filters = value
         else:
@@ -144,7 +144,7 @@ class Bundle(object):
             for item in self.contents:
                 try:
                     result = env.resolver.resolve_source(item)
-                except IOError, e:
+                except IOError as e:
                     raise BundleError(e)
                 if not isinstance(result, list):
                     result = [result]
@@ -161,7 +161,7 @@ class Bundle(object):
                     except (ValueError, BundleError):
                         pass
 
-                resolved.extend(map(lambda r: (item, r), result))
+                resolved.extend([(item, r) for r in result])
 
             self._resolved_contents = resolved
         return self._resolved_contents
@@ -169,7 +169,7 @@ class Bundle(object):
     def _get_depends(self):
         return self._depends
     def _set_depends(self, value):
-        self._depends = [value] if isinstance(value, basestring) else value
+        self._depends = [value] if isinstance(value, str) else value
         self._resolved_depends = None
     depends = property(_get_depends, _set_depends, doc=
     """Allows you to define an additional set of files (glob syntax
@@ -186,7 +186,7 @@ class Bundle(object):
             for item in self.depends:
                 try:
                     result = env.resolver.resolve_source(item)
-                except IOError, e:
+                except IOError as e:
                     raise BundleError(e)
                 if not isinstance(result, list):
                     result = [result]
@@ -211,12 +211,12 @@ class Bundle(object):
                 version = env.manifest.query(self, env)
             # Often the versioner is able to help.
             if not version:
-                from version import VersionIndeterminableError
+                from .version import VersionIndeterminableError
                 if env.versions:
                     try:
                         version = env.versions.determine_version(self, env)
                         assert version
-                    except VersionIndeterminableError, e:
+                    except VersionIndeterminableError as e:
                         reason = e
                 else:
                     reason = '"versions" option not set'
@@ -403,7 +403,7 @@ class Bundle(object):
                         # very often is better than running filters
                         # unnecessarily occasionally.
                         cache_key=[FileHunk(cnt)] if not is_url(cnt) else [])
-                except MoreThanOneFilterError, e:
+                except MoreThanOneFilterError as e:
                     raise BuildError(e)
                 except NoFilters:
                     # Open the file ourselves.
@@ -433,11 +433,11 @@ class Bundle(object):
         try:
             try:
                 final = filtertool.apply_func(filters_to_run, 'concat', [hunks])
-            except MoreThanOneFilterError, e:
+            except MoreThanOneFilterError as e:
                 raise BuildError(e)
             except NoFilters:
                 final = merge([h for h, _ in hunks])
-        except IOError, e:
+        except IOError as e:
             # IOErrors can be raised here if hunks are loaded for the
             # first time. TODO: IOErrors can also be raised when
             # a file is read during the filter-apply phase, but we don't

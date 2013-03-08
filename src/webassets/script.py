@@ -11,6 +11,7 @@ from webassets.merge import MemoryHunk
 from webassets.version import get_manifest
 from webassets.cache import FilesystemCache
 from webassets.utils import set, StringIO
+import collections
 
 
 __all__ = ('CommandError', 'CommandLineEnvironment', 'main')
@@ -111,7 +112,7 @@ class BuildCommand(Command):
             output = dict(output)
 
         # Validate bundle names
-        bundle_names = bundles if bundles else (output.keys() if output else [])
+        bundle_names = bundles if bundles else (list(output.keys()) if output else [])
         for name in bundle_names:
             if not name in self.environment:
                 raise CommandError(
@@ -120,7 +121,7 @@ class BuildCommand(Command):
         # Make a list of bundles to build, and the filename to write to.
         if bundle_names:
             # TODO: It's not ok to use an internal property here.
-            bundles = [(n,b) for n, b in self.environment._named_bundles.items()
+            bundles = [(n,b) for n, b in list(self.environment._named_bundles.items())
                              if n in bundle_names]
         else:
             # Includes unnamed bundles as well.
@@ -186,7 +187,7 @@ class BuildCommand(Command):
                             os.makedirs(output_dir)
                     MemoryHunk(output.getvalue()).save(overwrite_filename)
                 built.append(bundle)
-            except BuildError, e:
+            except BuildError as e:
                 self.log.error("Failed, error was: %s" % e)
         if len(built):
             self.event_handlers['post_build']()
@@ -211,7 +212,7 @@ class WatchCommand(Command):
             # Before starting to watch for changes, also recognize changes
             # made while we did not run, and apply those immediately.
             for bundle in self.environment:
-                print 'Bringing up to date: %s' % bundle.output
+                print('Bringing up to date: %s' % bundle.output)
                 bundle.build(force=False)
 
             self.log.info("Watching %d bundles for changes..." %
@@ -222,16 +223,16 @@ class WatchCommand(Command):
 
                 built = []
                 for bundle in changed_bundles:
-                    print "Building bundle: %s ..." % bundle.output,
+                    print("Building bundle: %s ..." % bundle.output, end=' ')
                     sys.stdout.flush()
                     try:
                         bundle.build(force=True)
                         built.append(bundle)
-                    except BuildError, e:
-                        print ""
-                        print "Failed: %s" % e
+                    except BuildError as e:
+                        print("")
+                        print("Failed: %s" % e)
                     else:
-                        print "done"
+                        print("done")
 
                 if len(built):
                     self.event_handlers['post_build']()
@@ -257,7 +258,7 @@ class WatchCommand(Command):
                 mtime -= stat.st_ctime
 
             if mtimes.get(filename, mtime) != mtime:
-                if callable(bundles_to_update):
+                if isinstance(bundles_to_update, collections.Callable):
                     # Hook for when file has changed
                     try:
                         bundles_to_update = bundles_to_update()
@@ -336,14 +337,14 @@ class CommandLineEnvironment(object):
         self.environment = env
         self.log = log
         self.event_handlers = dict(post_build=lambda: True)
-        if callable(post_build):
+        if isinstance(post_build, collections.Callable):
             self.event_handlers['post_build'] = post_build
 
         # Instantiate each command
         command_def = self.DefaultCommands.copy()
         command_def.update(commands or {})
         self.commands = {}
-        for name, construct in command_def.items():
+        for name, construct in list(command_def.items()):
             if not construct:
                 continue
             if not isinstance(construct, (list, tuple)):
@@ -365,7 +366,7 @@ class CommandLineEnvironment(object):
         """
         try:
             function = self.commands[command]
-        except KeyError, e:
+        except KeyError as e:
             raise CommandError('unknown command: %s' % e)
         else:
             return function(**args)
@@ -407,7 +408,7 @@ class GenericArgparseImplementation(object):
         def reload_config(self):
             try:
                 self.cmd.environment = YAMLLoader(self.ns.config).load_environment()
-            except Exception, e:
+            except Exception as e:
                 raise EnvironmentError(e)
             return True
 
@@ -446,7 +447,7 @@ class GenericArgparseImplementation(object):
 
         # Add subparsers.
         subparsers = parser.add_subparsers(dest='command')
-        for command in CommandLineEnvironment.DefaultCommands.keys():
+        for command in list(CommandLineEnvironment.DefaultCommands.keys()):
             command_parser = subparsers.add_parser(command)
             maker = getattr(self, 'make_%s_parser' % command, False)
             if maker:
@@ -553,8 +554,8 @@ class GenericArgparseImplementation(object):
         """
         try:
             return self.run_with_argv(argv)
-        except CommandError, e:
-            print e
+        except CommandError as e:
+            print(e)
             return 1
 
 

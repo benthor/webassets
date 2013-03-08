@@ -3,12 +3,12 @@
 specific features/aspects, like "globbing" or "versions".
 """
 
-from __future__ import with_statement
+
 
 import copy
 from os import path
-import urllib2
-from StringIO import StringIO
+import urllib.request, urllib.error, urllib.parse
+from io import StringIO
 
 from nose.tools import assert_raises, assert_equals
 from nose import SkipTest
@@ -22,7 +22,7 @@ from webassets.filter import Filter
 from webassets.updater import TimestampUpdater, SKIP_CACHE
 from webassets.version import Manifest, Version, VersionIndeterminableError
 
-from helpers import (
+from .helpers import (
     TempEnvironmentHelper, assert_raises_regexp)
 
 
@@ -35,7 +35,7 @@ class TestBundleConfig(TempEnvironmentHelper):
         """
         try:
             Bundle(yaddayada=True)
-        except TypeError, e:
+        except TypeError as e:
             assert "unexpected keyword argument" in ("%s" % e)
         else:
             raise Exception('Expected TypeError not raised')
@@ -507,18 +507,16 @@ class TestGlobbing(TempEnvironmentHelper):
         """[Regression] Glob should be smart enough not to pick
         up directories."""
         self.create_directories('subdir')
-        assert not filter(lambda s: 'subdir' in s,
-                           get_all_bundle_files(self.mkbundle('*')))
+        assert not [s for s in get_all_bundle_files(self.mkbundle('*')) if 'subdir' in s]
 
     def test_glob_exclude_output(self):
         """Never include the output file in the globbinb result.
         """
         self.create_files(['out.js'])
-        assert not filter(lambda s: 'out.js' in s,
-            get_all_bundle_files(self.mkbundle('*', output='out.js')))
+        assert not [s for s in get_all_bundle_files(self.mkbundle('*', output='out.js')) if 'out.js' in s]
 
 
-class MockHTTPHandler(urllib2.HTTPHandler):
+class MockHTTPHandler(urllib.request.HTTPHandler):
 
     def __init__(self, urls={}):
         self.urls = urls
@@ -544,9 +542,9 @@ class TestUrlContents(TempEnvironmentHelper):
 
     def setup(self):
         TempEnvironmentHelper.setup(self)
-        mock_opener = urllib2.build_opener(MockHTTPHandler({
+        mock_opener = urllib.request.build_opener(MockHTTPHandler({
             'http://foo': 'function() {}'}))
-        urllib2.install_opener(mock_opener)
+        urllib.request.install_opener(mock_opener)
 
     def test_valid_url(self):
         self.mkbundle('http://foo', output='out').build()

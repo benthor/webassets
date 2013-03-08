@@ -1,5 +1,5 @@
 from os import path
-import urlparse
+import urllib.parse
 from itertools import chain
 import warnings
 try:
@@ -9,11 +9,11 @@ except ImportError:
     import glob
     from glob import has_magic
 
-from bundle import Bundle, is_url
-from cache import get_cache
-from version import get_versioner, get_manifest
-from updater import get_updater
-from exceptions import ImminentDeprecationWarning
+from .bundle import Bundle, is_url
+from .cache import get_cache
+from .version import get_versioner, get_manifest
+from .updater import get_updater
+from .exceptions import ImminentDeprecationWarning
 
 
 __all__ = ('Environment', 'RegisterError')
@@ -118,7 +118,7 @@ def url_prefix_join(prefix, fragment):
     """Join url prefix with fragment."""
     # Ensures urljoin will not cut the last part.
     prefix += prefix[-1:] != '/' and '/' or ''
-    return urlparse.urljoin(prefix, fragment)
+    return urllib.parse.urljoin(prefix, fragment)
 
 
 class Resolver(object):
@@ -216,7 +216,7 @@ class Resolver(object):
         method, instead of simply falling back to ``super()``.
         """
         # Build a list of dir -> url mappings
-        mapping = self.env.url_mapping.items()
+        mapping = list(self.env.url_mapping.items())
         try:
             mapping.append((self.env.directory, self.env.url))
         except EnvironmentError:
@@ -224,9 +224,7 @@ class Resolver(object):
             pass
 
         # Make sure paths are absolute, normalized, and sorted by length
-        mapping = map(
-            lambda (p,u): (path.normpath(path.abspath(p)), u),
-            mapping)
+        mapping = [(path.normpath(path.abspath(p_u[0])), p_u[1]) for p_u in mapping]
         mapping.sort(cmp=lambda i, j: cmp(len(i[0]), len(j[0])), reverse=True)
 
         needle = path.normpath(filepath)
@@ -264,7 +262,7 @@ class Resolver(object):
         """
 
         # Pass through some things unscathed
-        if not isinstance(item, basestring):
+        if not isinstance(item, str):
             # Don't stand in the way of custom values.
             return item
         if is_url(item) or path.isabs(item):
@@ -366,7 +364,7 @@ class BaseEnvironment(object):
         self.config.update(config)
 
     def __iter__(self):
-        return chain(self._named_bundles.itervalues(), self._anon_bundles)
+        return chain(iter(self._named_bundles.values()), self._anon_bundles)
 
     def __getitem__(self, name):
         return self._named_bundles[name]
@@ -377,7 +375,7 @@ class BaseEnvironment(object):
     def __len__(self):
         return len(self._named_bundles) + len(self._anon_bundles)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     def register(self, name, *args, **kwargs):
@@ -407,7 +405,7 @@ class BaseEnvironment(object):
 
         # Register a dict
         if isinstance(name, dict) and not args and not kwargs:
-            for name, bundle in name.items():
+            for name, bundle in list(name.items()):
                 self.register(name, bundle)
             return
 

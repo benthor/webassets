@@ -3,7 +3,8 @@ import os
 import sys
 from itertools import takewhile
 
-from exceptions import BundleError
+from .exceptions import BundleError
+import collections
 
 
 __all__ = ('md5_constructor', 'pickle', 'set', 'StringIO',
@@ -19,7 +20,7 @@ else:
 
 
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 
@@ -32,9 +33,9 @@ else:
     set = set
 
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 
 
 def common_path_prefix(paths, sep=os.path.sep):
@@ -47,7 +48,7 @@ def common_path_prefix(paths, sep=os.path.sep):
     """
     def allnamesequal(name):
         return all(n==name[0] for n in name[1:])
-    bydirectorylevels = zip(*[p.split(sep) for p in paths])
+    bydirectorylevels = list(zip(*[p.split(sep) for p in paths]))
     return sep.join(x[0] for x in takewhile(allnamesequal, bydirectorylevels))
 
 
@@ -102,7 +103,7 @@ def make_option_resolver(clazz=None, attribute=None, classes=None,
         return clazz(*a, **kw)
 
     def resolve_option(option, env=None):
-        the_clazz = clazz() if callable(clazz) and not isinstance(option, type) else clazz
+        the_clazz = clazz() if isinstance(clazz, collections.Callable) and not isinstance(option, type) else clazz
 
         if not option and allow_none:
             return None
@@ -120,7 +121,7 @@ def make_option_resolver(clazz=None, attribute=None, classes=None,
             return instantiate(option, env)
 
         # If it is a string
-        elif isinstance(option, basestring):
+        elif isinstance(option, str):
             parts = option.split(':', 1)
             key = parts[0]
             arg = parts[1] if len(parts) > 1 else None
@@ -144,7 +145,7 @@ def RegistryMetaclass(clazz=None, attribute=None, allow_none=True, desc=None):
         """Return equality with config values that instantiate this."""
         return (hasattr(self, 'id') and self.id == other) or\
                id(self) == id(other)
-    def unicode(self):
+    def str(self):
         return "%s" % (self.id if hasattr(self, 'id') else repr(self))
 
     class Metaclass(type):
@@ -154,9 +155,9 @@ def RegistryMetaclass(clazz=None, attribute=None, allow_none=True, desc=None):
             if not '__eq__' in attrs:
                 attrs['__eq__'] = eq
             if not '__unicode__' in attrs:
-                attrs['__unicode__'] = unicode
+                attrs['__unicode__'] = str
             if not '__str__' in attrs:
-                attrs['__str__'] = unicode
+                attrs['__str__'] = str
             new_klass = type.__new__(mcs, name, bases, attrs)
             if hasattr(new_klass, 'id'):
                 mcs.REGISTRY[new_klass.id] = new_klass
@@ -178,7 +179,7 @@ def cmp_debug_levels(level1, level2):
     level_ints = { False: 0, 'merge': 1, True: 2 }
     try:
         return cmp(level_ints[level1], level_ints[level2])
-    except KeyError, e:
+    except KeyError as e:
         # Not sure if a dependency on BundleError is proper here. Validating
         # debug values should probably be done on assign. But because this
         # needs to happen in two places (Environment and Bundle) we do it here.

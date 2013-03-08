@@ -3,6 +3,7 @@ import re
 from os.path import join, normpath
 from webassets.filter import Filter
 from webassets.utils import common_path_prefix
+import collections
 
 
 __all__ = ()
@@ -32,8 +33,8 @@ class PatternRewriter(Filter):
 
     def input(self, _in, out, **kw):
         content = _in.read()
-        for func, pattern in self.patterns.items():
-            if not callable(func):
+        for func, pattern in list(self.patterns.items()):
+            if not isinstance(func, collections.Callable):
                 func = getattr(self, func)
             # Should this pass along **kw? How many subclasses would need it?
             # As is, subclasses needing access need to overwrite input() and

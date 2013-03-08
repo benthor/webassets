@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 import re
 
 from webassets.test import TempDirHelper, TempEnvironmentHelper
@@ -20,8 +20,8 @@ except ImportError:
     def assert_raises_regexp(expected, regexp, callable, *a, **kw):
         try:
             callable(*a, **kw)
-        except expected, e:
-            if isinstance(regexp, basestring):
+        except expected as e:
+            if isinstance(regexp, str):
                 regexp = re.compile(regexp)
             if not regexp.search(str(e.message)):
                 raise self.failureException('"%s" does not match "%s"' %
@@ -29,7 +29,7 @@ except ImportError:
         else:
             if hasattr(expected,'__name__'): excName = expected.__name__
             else: excName = str(expected)
-            raise AssertionError, "%s not raised" % excName
+            raise AssertionError("%s not raised" % excName)
 
 
 try:

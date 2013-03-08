@@ -45,11 +45,11 @@ class CompassConfig(dict):
     def to_string(self):
         def string_rep(val):
             """ Determine the correct string rep for the config file """
-            if type(val) == types.ListType:
+            if type(val) == list:
                 return str(val)
             else:
                 return '"%s"' % val
-        return '\n'.join(['%s = %s' % (k, string_rep(v)) for k, v in self.items()])
+        return '\n'.join(['%s = %s' % (k, string_rep(v)) for k, v in list(self.items())])
 
 
 class Compass(Filter):
@@ -124,7 +124,7 @@ class Compass(Filter):
 
         tempout = tempfile.mkdtemp()
         # Temporarily move to "tempout", so .sass-cache will be created there
-        old_wd = os.getcwdu()
+        old_wd = os.getcwd()
         os.chdir(tempout)
         try:
             # Make sure to use normpath() to not cause trouble with

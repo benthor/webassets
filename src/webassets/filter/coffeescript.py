@@ -49,6 +49,6 @@ class CoffeeScript(Filter):
                                'stdout=%s, returncode=%s') % (
                 stderr, stdout, proc.returncode))
         elif stderr:
-            print "coffeescript filter has warnings:", stderr
+            print("coffeescript filter has warnings:", stderr)
         out.write(stdout)
     

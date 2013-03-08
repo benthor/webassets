@@ -1,6 +1,6 @@
 from base64 import b64encode
 import mimetypes
-import os, urlparse
+import os, urllib.parse
 
 from webassets.filter.cssrewrite.base import CSSUrlRewriter
 
@@ -38,7 +38,7 @@ class CSSDataUri(CSSUrlRewriter):
             return
 
         # Ignore any urls which are not relative
-        parsed = urlparse.urlparse(url)
+        parsed = urllib.parse.urlparse(url)
         if parsed.scheme or parsed.netloc or parsed.path.startswith('/'):
             return
 

@@ -8,6 +8,7 @@
 ##  Ported to Python by Florian Schulze
 
 import os, re
+import collections
 
 # a multi-pattern parser
 
@@ -103,9 +104,9 @@ class ParseMaster:
         for pattern in self._patterns:
             if match.group(i) is not None:
                 replacement = pattern.replacement
-                if callable(replacement):
+                if isinstance(replacement, collections.Callable):
                     return replacement(match, i)
-                elif isinstance(replacement, (int, long)):
+                elif isinstance(replacement, int):
                     return match.group(replacement+i)
                 else:
                     return replacement
@@ -557,14 +558,14 @@ function _bar(_ocalvar) {
             _expected = open(expected).read()
         else:
             _expected = expected
-        print script[:20], encoding, fastDecode, specialChars, expected[:20]
-        print "="*40
+        print(script[:20], encoding, fastDecode, specialChars, expected[:20])
+        print("="*40)
         result = p.pack(_script, encoding, fastDecode, specialChars)
-        print len(result), len(_script)
+        print(len(result), len(_script))
         if (result != _expected):
-            print "ERROR!!!!!!!!!!!!!!!!"
-            print _expected
-            print result
+            print("ERROR!!!!!!!!!!!!!!!!")
+            print(_expected)
+            print(result)
             #print list(difflib.unified_diff(result, _expected))
 
 if __name__=='__main__':

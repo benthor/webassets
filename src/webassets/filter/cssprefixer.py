@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from webassets.filter import Filter
 
 
@@ -19,7 +19,7 @@ class CSSPrefixer(Filter):
 
     def output(self, _in, out, **kw):
         output = self.cssprefixer.process(_in.read(), False, False)
-        if isinstance(output, unicode):
+        if isinstance(output, str):
             # cssprefixer likes to return unicode strings
             output = output.encode('utf8')
         out.write(output)

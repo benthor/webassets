@@ -1,13 +1,13 @@
-from __future__ import with_statement
+
 import sys
 from nose.tools import assert_raises
 import textwrap
-from StringIO import StringIO
+from io import StringIO
 from webassets.bundle import Bundle
 from webassets.loaders import PythonLoader, YAMLLoader, LoaderError
 from webassets.exceptions import ImminentDeprecationWarning
 from nose import SkipTest
-from helpers import check_warnings
+from .helpers import check_warnings
 
 
 class TestYAML(object):
@@ -169,5 +169,5 @@ class TestPython(object):
         loader = PythonLoader(module)
         bundles = loader.load_bundles()
         assert len(bundles) == 1
-        assert bundles.values()[0].contents[0] == 'bar'
+        assert list(bundles.values())[0].contents[0] == 'bar'
 

@@ -62,7 +62,7 @@ def make_md5(data):
             yield obj.data()
         elif isinstance(obj, Filter):
             yield str(hash(obj))
-        elif isinstance(obj, (int, basestring)):
+        elif isinstance(obj, (int, str)):
             yield str(obj)
         else:
             raise ValueError('Cannot MD5 type %s' % type(obj))
@@ -74,7 +74,7 @@ def make_md5(data):
 
 def maybe_pickle(value):
     """Pickle the given value if it is not a string."""
-    if not isinstance(value, basestring):
+    if not isinstance(value, str):
         return pickle.dumps(value)
     return value
 

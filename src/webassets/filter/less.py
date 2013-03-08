@@ -1,4 +1,4 @@
-from __future__ import with_statement
+
 
 from webassets.filter import ExternalTool
 from webassets.utils import working_directory
