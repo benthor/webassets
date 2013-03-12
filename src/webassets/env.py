@@ -225,7 +225,7 @@ class Resolver(object):
 
         # Make sure paths are absolute, normalized, and sorted by length
         mapping = [(path.normpath(path.abspath(p_u[0])), p_u[1]) for p_u in mapping]
-        mapping.sort(cmp=lambda i, j: cmp(len(i[0]), len(j[0])), reverse=True)
+        mapping.sort(key=lambda x: len(x[0]), reverse=True)
 
         needle = path.normpath(filepath)
         for candidate, url in mapping:

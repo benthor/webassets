@@ -2,6 +2,7 @@
 
 import gzip
 from webassets.filter import Filter
+import io
 
 
 __all__ = ('GZip',)
@@ -21,7 +22,10 @@ class GZip(Filter):
     name = 'gzip'
 
     def output(self, _in, out, **kw):
-        zfile = gzip.GzipFile(mode='wb', compresslevel=6, fileobj=out)
+        # HACK! FUGLY
+        out = io.BytesIO(out.read().encode())
+        _in = io.BytesIO(_in.read().encode())
+        zfile = gzip.GzipFile(mode='w', compresslevel=6, fileobj=out)
         try:
             zfile.write(_in.read())
         finally:

@@ -68,6 +68,8 @@ def make_md5(data):
             raise ValueError('Cannot MD5 type %s' % type(obj))
     md5 = md5_constructor()
     for d in walk(data):
+        if isinstance(d, str):
+            d = d.encode()
         md5.update(d)
     return md5.hexdigest()
 
@@ -191,7 +193,7 @@ class FilesystemCache(BaseCache):
         filename = path.join(self.directory, '%s' % make_md5(key))
         f = open(filename, 'wb')
         try:
-            f.write(maybe_pickle(data))
+            f.write(maybe_pickle(data.encode()))
         finally:
             f.close()
 

@@ -526,11 +526,11 @@ class MockHTTPHandler(urllib.request.HTTPHandler):
         try:
             content = self.urls[url]
         except KeyError:
-            resp = urllib2.addinfourl(StringIO(""), None, url)
+            resp = urllib.request.addinfourl(StringIO(""), None, url)
             resp.code = 404
             resp.msg = "OK"
         else:
-            resp = urllib2.addinfourl(StringIO(content), None, url)
+            resp = urllib.request.addinfourl(StringIO(content), None, url)
             resp.code = 200
             resp.msg = "OK"
         return resp

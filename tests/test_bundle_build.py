@@ -341,6 +341,7 @@ class TestFilterApplication(TempEnvironmentHelper):
         parent_bundle = self.mkbundle(child_bundle, output='out',
                                filters=AppendFilter(input='-parent', unique=False))
         parent_bundle.build()
+        print(self.get('out'))
         assert self.get('out') == 'foo-child\nfoo-child'
 
     def test_input_with_nested_in_merge_mode(self):
@@ -462,13 +463,13 @@ class TestFilterApplication(TempEnvironmentHelper):
                               output='out', debug='merge').build()
                 assert self.get('out') == 'foo:in_upgr:out_upgr'
 
-        yield MaxDebugLevelFilters.test_with_level, 'merge'
+        yield MaxDebugLevelFilters().test_with_level, 'merge'
         # With max_debug_level=True causes merge mode
-        yield MaxDebugLevelFilters.test_with_level, True
+        yield MaxDebugLevelFilters().test_with_level, True
         # With max_debug_level=None is same as =True
-        yield MaxDebugLevelFilters.test_with_level, None
+        yield MaxDebugLevelFilters().test_with_level, None
 
-        yield MaxDebugLevelFilters.test_upgrading_affect_on_normal_filters
+        yield MaxDebugLevelFilters().test_upgrading_affect_on_normal_filters
 
 
 class TestAutoBuild(TempEnvironmentHelper):

@@ -11,7 +11,7 @@ import pickle
 from webassets.bundle import has_placeholder, is_url, get_all_bundle_files
 from webassets.merge import FileHunk
 from webassets.utils import md5_constructor, RegistryMetaclass
-
+import json
 
 __all__ = ('get_versioner', 'VersionIndeterminableError',
            'Version', 'TimestampVersion',
@@ -161,7 +161,10 @@ class HashVersion(Version):
                     'output target has a placeholder')
 
         hasher = self.hasher()
-        hasher.update(hunk.data())
+        h = hunk.data()
+        if isinstance(h, str):
+            h=h.encode()
+        hasher.update(h)
         return hasher.hexdigest()[:self.length]
 
 
@@ -260,23 +263,19 @@ class JsonManifest(FileManifest):
     id = 'json'
 
     def __init__(self, *a, **kw):
-        try:
-            import json
-        except ImportError:
-            import simplejson as json
-        self.json = json
+
         super(JsonManifest, self).__init__(*a, **kw)
 
     def _load_manifest(self):
         if os.path.exists(self.filename):
-            with open(self.filename, 'rb') as f:
-                self.manifest = self.json.load(f)
+            with open(self.filename, 'r') as f:
+                self.manifest = json.load(f)
         else:
             self.manifest = {}
 
     def _save_manifest(self):
-        with open(self.filename, 'wb') as f:
-            self.json.dump(self.manifest, f)
+        with open(self.filename, 'w') as f:
+            json.dump(self.manifest, f)
 
 
 class CacheManifest(Manifest):

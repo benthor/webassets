@@ -5,10 +5,7 @@ import contextlib
 
 import urllib.request, urllib.error, urllib.parse
 import logging
-try:
-    import io as StringIO
-except:
-    import io
+import io
 
 from .utils import cmp_debug_levels
 
@@ -54,7 +51,7 @@ class BaseHunk(object):
 
     def save(self, filename):
         with open(filename, 'wb') as f:
-            f.write(self.data())
+            f.write(self.data().encode())
 
 
 class FileHunk(BaseHunk):
@@ -73,7 +70,7 @@ class FileHunk(BaseHunk):
     def data(self):
         f = open(self.filename, 'rb')
         try:
-            return f.read()
+            return f.read().decode()
         finally:
             f.close()
 
@@ -158,7 +155,7 @@ class MemoryHunk(BaseHunk):
     def save(self, filename):
         f = open(filename, 'wb')
         try:
-            f.write(self.data())
+            f.write(self.data().encode())
         finally:
             f.close()
 
@@ -171,7 +168,14 @@ def merge(hunks, separator=None):
     # files, like when a last line is a //-comment.
     if not separator:
         separator = '\n'
-    return MemoryHunk(separator.join([h.data() for h in hunks]))
+    tmp = []
+    for h in hunks:
+        h = h.data()
+        if isinstance(h, bytes):
+            h = h.decode()        
+        tmp.append(h)
+        
+    return MemoryHunk(separator.join(tmp))
 
 
 class MoreThanOneFilterError(Exception):
@@ -241,11 +245,19 @@ class FilterTool(object):
             kwargs_final = self.kwargs.copy()
             kwargs_final.update(kwargs or {})
 
-            data = io.StringIO(hunk.data())
+            h = hunk.data()
+
+            if isinstance(h, bytes):
+                data = io.BytesIO(h)
+            else:
+                data = io.StringIO(h)
             for filter in filters:
                 log.debug('Running method "%s" of  %s with kwargs=%s',
                     type, filter, kwargs_final)
-                out = io.StringIO()
+                if isinstance(data, io.StringIO):
+                    out = io.StringIO()
+                else:
+                    out = io.BytesIO()
                 getattr(filter, type)(data, out, **kwargs_final)
                 data = out
                 data.seek(0)

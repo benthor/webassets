@@ -46,18 +46,11 @@ def smartsplit(string, sep):
     be done.
     """
     assert string is not None   # or shlex will read from stdin
-    # shlex fails miserably with unicode input
-    is_unicode = isinstance(sep, str)
-    if is_unicode:
-        string = string.encode('utf8')
     l = shlex.shlex(string, posix=True)
     l.whitespace += ','
     l.whitespace_split = True
     l.quotes = ''
-    if is_unicode:
-        return [s.decode('utf8') for s in list(l)]
-    else:
-        return list(l)
+    return list(l)
 
 
 class option(tuple):
@@ -430,6 +423,7 @@ class ExternalTool(Filter):
             argv = list(map(replace, self.argv))
         else:
             argv = self.argv
+        print("DEBUG! %s %s %s, called with %s" %(argv, out, data, kwargs))
         self.subprocess(argv, out, data=data)
 
     @classmethod
@@ -471,7 +465,10 @@ class ExternalTool(Filter):
                     raise ValueError(
                         '{input} placeholder given, but no data passed')
                 with os.fdopen(input_file.fd, 'wb') as f:
-                    f.write(data.read() if hasattr(data, 'read') else data)
+                    if hasattr(data, 'read'):
+                        f.write(data.read())
+                    else: 
+                        f.write(data.encode())
                     # No longer pass to stdin
                     data = None
 
@@ -482,8 +479,10 @@ class ExternalTool(Filter):
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.PIPE)
-            stdout, stderr = proc.communicate(
-                data.read() if hasattr(data, 'read') else data)
+            if hasattr(data, 'read'):
+                stdout, stderr = proc.communicate(data.read())
+            else:
+                stdout, stderr = proc.communicate(data)
             if proc.returncode:
                 raise FilterError(
                     '%s: subprocess returned a non-success result code: '
@@ -493,7 +492,7 @@ class ExternalTool(Filter):
             else:
                 if output_file.created:
                     with os.fdopen(output_file.fd, 'rb') as f:
-                        out.write(f.read())
+                        out.write(f.read().decode())
                 else:
                     out.write(stdout)
         finally:

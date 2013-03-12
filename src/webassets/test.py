@@ -80,7 +80,10 @@ class TempDirHelper(object):
     def get(self, name):
         """Return the given file's contents.
         """
-        return open(self.path(name)).read()
+        f = open(self.path(name))
+        c = f.read()
+        f.close()
+        return c
 
     def unlink(self, name):
         os.unlink(self.path(name))
